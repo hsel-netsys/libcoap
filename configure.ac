@@ -498,9 +498,25 @@ if test "x$build_dtls" = "xyes"; then
                   [have_wolfssl="no"])
 
     # Mbed TLS [does not have mbedtls.pc pkg-config file]
+    
+    if test "${MbedTLS_CFLAGS+set}" = "set"; then
+        mbedtls_cflags_overridden="yes"
+    fi
+    if test "${MbedTLS_LIBS+set}" = "set"; then
+        mbedtls_libs_overridden="yes"
+    fi
+    auto_MbedTLS_CFLAGS=""
+    auto_MbedTLS_LIBS="-lmbedtls -lmbedcrypto -lmbedx509"
+    
+    if test "x$mbedtls_cflags_overridden" != "xyes";  then
+        MbedTLS_CFLAGS="$auto_MbedTLS_CFLAGS"
+    fi
+    if test "x$mbedtls_libs_overridden" != "xyes";  then
+        MbedTLS_LIBS="$auto_MbedTLS_LIBS"
+    fi    
     AC_CHECK_LIB(mbedtls, mbedtls_version_get_string,
-                 [have_mbedtls="yes"; MbedTLS_CFLAGS="" ; MbedTLS_LIBS="-lmbedtls -lmbedcrypto -lmbedx509"],
-                 [have_mbedtls="no"], -lmbedx509 -lmbedcrypto)
+                 [have_mbedtls="yes"],
+                 [have_mbedtls="no"], $MbedTLS_LIBS)    
     if test "x$have_mbedtls" = "xyes"; then
         if test "x$cross_compiling" = "xyes" ; then
             # Have no option but to do this
@@ -510,6 +526,7 @@ if test "x$build_dtls" = "xyes"; then
             AC_LANG_PUSH(C)
             local_MbedTLS_save_LIBS=$LIBS
             LIBS="$MbedTLS_LIBS $LIBS"
+            CFLAGS="$MbedTLS_CFLAGS $LIBS"
             AC_LINK_IFELSE([dnl
                 AC_LANG_SOURCE(
                     [[#include <stdio.h>
